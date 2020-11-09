@@ -8,7 +8,6 @@ module CBT.Backend
   , login
   , printInspect
   , printLogs
-  , push
   , readContainerFile
   , removeContainer
   , runReadStdout
@@ -55,11 +54,20 @@ instance Show ContainerRunFailure where
 class Backend (b :: Implementation) where
   binaryName        :: String
   getHostPort       :: WithEnv env => ContainerName -> Port -> RIO env Port
+  push              :: WithEnv env => ImageName -> Destination -> RIO env ()
   testImageExists   :: WithEnv env => BuildDefinition -> RIO env Bool
 
 
 instance Backend 'Podman where
   binaryName = "podman"
+
+  push imageName destination
+    = runProcess_
+    $ backendProc @'Podman
+    [ "push"
+    , convertText imageName
+    , convertText destination
+    ]
 
   getHostPort containerName containerPort' = parsePort =<< captureText proc
     where
@@ -92,6 +100,13 @@ instance Backend 'Podman where
 
 instance Backend 'Docker where
   binaryName = "docker"
+
+  push imageName destination
+    = runProcess_
+    $ backendProc @'Docker
+    [ "push"
+    , convertText destination <> ":" <> convertText imageName
+    ]
 
   getHostPort containerName containerPort' = parsePort =<< captureText proc
     where
@@ -274,19 +289,6 @@ removeContainer containerName
   [ "container"
   , "rm"
   , convertText containerName
-  ]
-
-push
-  :: forall b env . (Backend b, WithEnv env)
-  => ImageName
-  -> Destination
-  -> RIO env ()
-push imageName destination
-  = runProcess_
-  $ backendProc @b
-  [ "push"
-  , convertText imageName
-  , convertText destination
   ]
 
 login
