@@ -1,5 +1,3 @@
-![CI](https://github.com/mbj/cbt/workflows/CI/badge.svg)
+# LEGACY REPOSITORY
 
-# cbt
-
-Minimal container backend tooling.
+Development was moved to [mhs](https://github.com/mbj/mhs/tree/main/cbt).
